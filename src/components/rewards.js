@@ -1,25 +1,32 @@
 import React from 'react';
 import './rewards.css';
-import dataSet from './models/dataSet';
 
 
 class Rewards extends React.Component {
 
     constructor() {
         super();
-        this.state = {selectedOptionId: 0, displayingMonth: "all 3 months"};
-        fetch("http://localhost:8080/1")
-        .then(res => res.json())
-        .then(
-            (result) => {
-            console.log(result)
+        this.state = {
+            dataSet: [],
+            month: '',
+            text: '3 months'
         }
-      )
+       
+    }
+    componentDidMount() {
+        fetch('http://localhost:8080/rewards/', {
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Credentials': 'true'
+            }
+        }).then(res => res.json())
+        .then( (result) => {
+            this.setState({dataSet: result, month: ''})
+        });
     }
 
-    getData() {
-        
-        return dataSet.map( (data, index) => {
+    renderTableRows() {
+        return this.state.dataSet.map( (data, index) => {
             return (
                 <tr key={index}>
                     <td>{data.accountId}</td>
@@ -31,17 +38,24 @@ class Rewards extends React.Component {
         });
     }
 
-    changeMonth = () => {
-        var v = document.getElementById("selectedMonth").value;
-        if(v == 0) {
-            this.setState({displayingMonth: "all 3 months"});
-        } else if(v == 1) {
-            this.setState({displayingMonth: "January month"});
-        } else if(v == 2){
-            this.setState({displayingMonth: "February Month"});
-        } else if(v == 3) {
-            this.setState({displayingMonth: "March month"});
-        }
+    handleChange(event) {
+        fetch('http://localhost:8080/rewards/' + event.target.value, {
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Credentials': 'true'
+            }
+        }).then(res => res.json())
+        .then( (result) => {
+            if(event.target.value == 1) {
+                this.setState({dataSet: result, month: event.target.value, text: 'January'})
+            } else if(event.target.value == 2) {
+                this.setState({dataSet: result, month: event.target.value, text: 'February'})
+            } else if(event.target.value == 3) {
+                this.setState({dataSet: result, month: event.target.value, text: 'March'})
+            } else {
+                this.setState({dataSet: result, month: event.target.value, text: '3 months'})
+            }
+        });
     }
 
     render() {
@@ -49,17 +63,16 @@ class Rewards extends React.Component {
             <div>
                 <div style={{display: 'flex'}}>
                     <div className="select-container">
-                        <select id= "selectedMonth" defaultValue="0">
+                        <select id= "selectedMonth" onChange = {this.handleChange.bind(this)} defaultValue="">
                             <option value="1">January</option>
                             <option value="2">February</option>
                             <option value="3">March</option>
-                            <option value="0">All 3 Months</option>
+                            <option value="">All 3 Months</option>
                         </select>
                     </div>
-                    <button onClick={this.changeMonth}>Submit</button>
                 </div>
                 <div className="grid-container">
-                    <p className="notifiedText">Displaying total reward points for {this.state.displayingMonth}</p>
+                    <p className="notifiedText">Displaying total reward points for {this.state.text} </p>
                     <table>
                         <thead>
                             <tr>
@@ -70,7 +83,7 @@ class Rewards extends React.Component {
                             </tr>
                         </thead>
                         <tbody>
-                            {this.getData()}
+                        {this.renderTableRows()}
                         </tbody>
                     </table>
                 </div>
